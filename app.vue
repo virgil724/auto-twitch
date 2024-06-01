@@ -18,7 +18,7 @@
           <USkeleton class="h-4 w-[200px]" />
         </div>
       </div>
-      <v-else class="grid gap-y-4">
+      <div class="grid gap-y-4" v-else>
         <div class="flex items-center space-x-4">
           <UAvatar
             :src="user_info.profile_image_url"
@@ -31,11 +31,6 @@
           </div>
         </div>
 
-        <!-- <UTextarea
-          placeholder="自訂訊息"
-          class="my-10"
-          v-model="storage.Message"
-        ></UTextarea> -->
         <URange :min="0" :step="10" :max="6000" v-model="storage.Ban_time" />
         Ban_time: {{ storage.Ban_time }}
         <UCard class="">
@@ -50,7 +45,7 @@
           </div>
           <RewardSelectMenu v-model="storage.WithReward"></RewardSelectMenu>
         </UCard>
-      </v-else>
+      </div>
       <UButton :to="url" icon="i-mdi-twitch" class="mt-4"
         >Authorization With Twitch</UButton
       >
@@ -69,6 +64,7 @@ const storage = useStorage("Custom", {
   WithReward: "",
   Message: "",
 });
+
 const custom_message = computed(() => storage.value.Message);
 if (route.path) {
   const param = useUrlSearchParams(route.path);
@@ -146,21 +142,20 @@ const get_user = async (login) => {
 };
 
 const ban_user = async (user_id) => {
-  console.log(storage.value.Ban_time)
-  // await $fetch("https://api.twitch.tv/helix/moderation/bans", {
-  //   headers: {
-  //     Authorization: `Bearer ${token.value}`,
-  //     "Client-Id": "lrcjebba56rl7xikvtrki8yh9pb6ok",
-  //   },
-  //   method: "POST",
-  //   body: {
-  //     data: { user_id, duration: storage.value.Ban_time },
-  //   },
-  //   query: {
-  //     broadcaster_id: user_info.value.id,
-  //     moderator_id: user_info.value.id,
-  //   },
-  // });
+  await $fetch("https://api.twitch.tv/helix/moderation/bans", {
+    headers: {
+      Authorization: `Bearer ${token.value}`,
+      "Client-Id": "lrcjebba56rl7xikvtrki8yh9pb6ok",
+    },
+    method: "POST",
+    body: {
+      data: { user_id, duration: storage.value.Ban_time },
+    },
+    query: {
+      broadcaster_id: user_info.value.id,
+      moderator_id: user_info.value.id,
+    },
+  });
 };
 const send_message = async (message) => {
   await $fetch("https://api.twitch.tv/helix/chat/messages", {
@@ -185,8 +180,9 @@ const url = computed(() => {
   b.scope =
     "channel:read:redemptions moderator:manage:banned_users user:write:chat";
   const urlParam = new URLSearchParams(b);
-
-  // console.log(urlParam);
-  return `${a.toString()}?${urlParam.toString()}&redirect_uri=http://localhost:3000`;
+  const {
+    public: { baseUrl },
+  } = useRuntimeConfig();
+  return `${a.toString()}?${urlParam.toString()}&redirect_uri=${baseUrl}`;
 });
 </script>
